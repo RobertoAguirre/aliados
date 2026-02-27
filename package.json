@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "postinstall": "cd backend && npm install && cd ../frontend && npm install",
-    "build": "cd frontend && npm run build",
+    "build": "cd frontend && rm -rf node_modules && npm install && npm run build",
     "start": "cd backend && node src/index.js"
   }
 }
