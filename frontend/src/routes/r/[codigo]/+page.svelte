@@ -19,7 +19,7 @@
     <a href="/" class="mt-4 inline-block underline">Volver al inicio</a>
   </div>
 {:else}
-  <div class="min-h-[80vh] flex flex-col">
+  <div class="min-h-screen flex flex-col">
     <div class="flex-1 grid grid-cols-2 min-h-[320px]">
       <div
         class="bg-brand-blue flex flex-col items-center justify-center p-4 border-r-2 border-brand-black"
