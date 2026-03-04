@@ -22,11 +22,11 @@
   const codigo = $derived(data?.codigo ?? '');
   const rol = $derived(data?.rol ?? 'unete');
   const esImpulsa = $derived(rol === 'impulsa');
-  const accentBorder = $derived(esImpulsa ? 'border-brand-orange' : 'border-[var(--color-brand-yellow)]');
-  const accentBg = $derived(esImpulsa ? 'bg-brand-orange' : 'bg-brand-yellow');
+  const accentBorder = $derived(esImpulsa ? 'border-brand-blue' : 'border-brand-blue');
+  const accentBg = $derived(esImpulsa ? 'bg-brand-blue/5' : 'bg-brand-blue/5');
 
   const fechaNacimiento = $derived(
-    `${form.anio}-${form.mes.padStart(2, '0')}-${form.dia.padStart(2, '0')}`
+    `${String(form.anio)}-${String(form.mes).padStart(2, '0')}-${String(form.dia).padStart(2, '0')}`
   );
 
   async function submit() {
@@ -201,7 +201,7 @@
         <button
           type="submit"
           disabled={enviando}
-          class="w-full py-3 font-bold bg-brand-black text-brand-yellow rounded border-2 border-brand-black hover:opacity-90 disabled:opacity-50"
+          class="w-full py-3 font-bold bg-brand-blue text-white rounded border-2 border-brand-black hover:opacity-90 disabled:opacity-50"
         >
           {enviando ? 'Creando…' : 'CREAR USUARIO'}
         </button>

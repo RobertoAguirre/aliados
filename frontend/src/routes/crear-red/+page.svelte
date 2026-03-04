@@ -18,7 +18,7 @@
   let exito = $state(null);
 
   const fechaNacimiento = $derived(
-    `${form.anio}-${form.mes.padStart(2, '0')}-${form.dia.padStart(2, '0')}`
+    `${String(form.anio)}-${String(form.mes).padStart(2, '0')}-${String(form.dia).padStart(2, '0')}`
   );
 
   async function submit() {
@@ -67,7 +67,7 @@
 </svelte:head>
 
 <div class="max-w-lg mx-auto px-4 py-6">
-  <div class="bg-white rounded-lg border-2 border-brand-orange p-6 shadow-lg">
+  <div class="bg-white rounded-lg border-2 border-brand-blue p-6 shadow-lg">
     <h2 class="text-lg font-bold flex items-center gap-2 mb-6">
       <span class="w-8 h-8 rounded-full bg-brand-blue/20 flex items-center justify-center text-brand-blue">👤</span>
       Crear mi red (primer impulsor)
@@ -135,7 +135,7 @@
           <LeafletMap bind:lat={form.lat} bind:lng={form.lng} />
         </div>
         {#if error}<p class="text-red-800 text-sm">{error}</p>{/if}
-        <button type="submit" disabled={enviando} class="w-full py-3 font-bold bg-brand-black text-brand-yellow rounded border-2 border-brand-black hover:opacity-90 disabled:opacity-50">
+        <button type="submit" disabled={enviando} class="w-full py-3 font-bold bg-brand-blue text-white rounded border-2 border-brand-black hover:opacity-90 disabled:opacity-50">
           {enviando ? 'Creando…' : 'CREAR USUARIO'}
         </button>
       </form>

@@ -22,12 +22,12 @@
   <div class="min-h-[80vh] flex flex-col">
     <div class="flex-1 grid grid-cols-2 min-h-[320px]">
       <div
-        class="bg-brand-orange flex flex-col items-center justify-center p-4 border-r-2 border-brand-black"
+        class="bg-brand-blue flex flex-col items-center justify-center p-4 border-r-2 border-brand-black"
       >
         <button
           type="button"
           onclick={() => elegir('impulsa')}
-          class="px-8 py-4 font-bold bg-white border-2 border-brand-black rounded shadow-[4px_4px_0_0_#000] hover:bg-gray-100"
+          class="px-8 py-4 font-bold bg-white text-brand-black border-2 border-brand-black rounded shadow-[4px_4px_0_0_#000] hover:bg-gray-100"
         >
           IMPULSA
         </button>
@@ -40,7 +40,7 @@
         <button
           type="button"
           onclick={() => elegir('unete')}
-          class="px-8 py-4 font-bold bg-brand-orange border-2 border-brand-black rounded shadow-[4px_4px_0_0_#000] hover:opacity-90"
+          class="px-8 py-4 font-bold bg-brand-blue text-white border-2 border-brand-black rounded shadow-[4px_4px_0_0_#000] hover:opacity-90"
         >
           ÚNETE
         </button>

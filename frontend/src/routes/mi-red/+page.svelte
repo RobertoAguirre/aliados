@@ -63,7 +63,7 @@
     <button
       type="submit"
       disabled={enviando}
-      class="px-4 py-2 font-bold bg-brand-black text-brand-yellow rounded border-2 border-brand-black disabled:opacity-50"
+      class="px-4 py-2 font-bold bg-brand-blue text-white rounded border-2 border-brand-black disabled:opacity-50"
     >
       {enviando ? '…' : 'Ver'}
     </button>

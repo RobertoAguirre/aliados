@@ -1,9 +1,8 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Paleta change and code: fondo neón, negro, naranja, azul */
-  --color-brand-yellow: #eeff00;
+  /* Azul, blanco y negro para detalles */
+  --color-brand-white: #ffffff;
   --color-brand-black: #000000;
-  --color-brand-orange: #ffa500;
-  --color-brand-blue: #6a5acd;
+  --color-brand-blue: #2563eb;
 }

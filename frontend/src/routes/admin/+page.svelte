@@ -103,7 +103,7 @@
         <button
           type="submit"
           disabled={cargando}
-          class="w-full py-2 font-bold bg-brand-black text-brand-yellow rounded border-2 border-brand-black disabled:opacity-50"
+          class="w-full py-2 font-bold bg-brand-blue text-white rounded border-2 border-brand-black disabled:opacity-50"
         >
           {cargando ? 'Entrando…' : 'Entrar'}
         </button>
@@ -116,7 +116,7 @@
         <button
           type="button"
           onclick={cargarRedes}
-          class="px-3 py-1 text-sm border border-brand-black rounded bg-brand-yellow hover:opacity-90"
+          class="px-3 py-1 text-sm border border-brand-black rounded bg-brand-blue text-white hover:opacity-90"
         >
           Actualizar
         </button>
@@ -130,7 +130,7 @@
         <div class="overflow-x-auto">
           <table class="w-full text-sm border-collapse">
             <thead>
-              <tr class="bg-brand-yellow">
+              <tr class="bg-brand-blue text-white">
                 <th class="border border-brand-black px-2 py-1 text-left">Nombre</th>
                 <th class="border border-brand-black px-2 py-1 text-left">Código</th>
                 <th class="border border-brand-black px-2 py-1 text-left">Rol</th>
