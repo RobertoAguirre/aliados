@@ -29,7 +29,7 @@
           onclick={() => elegir('impulsa')}
           class="px-8 py-4 font-bold bg-white text-brand-black border-2 border-brand-black rounded shadow-[4px_4px_0_0_#000] hover:bg-gray-100"
         >
-          IMPULSA
+          Quiero ser Líder
         </button>
         <p class="mt-4 text-center text-sm font-medium">
           CONSTRUYE TU PROPIA RED EN APOYO A:
@@ -42,7 +42,7 @@
           onclick={() => elegir('unete')}
           class="px-8 py-4 font-bold bg-brand-blue text-white border-2 border-brand-black rounded shadow-[4px_4px_0_0_#000] hover:opacity-90"
         >
-          ÚNETE
+          Me quiero unir
         </button>
         <p class="mt-4 text-center text-sm font-medium">A LA RED DE:</p>
         <p class="mt-1 text-center font-bold">{referente.nombreCompleto}</p>

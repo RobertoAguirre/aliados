@@ -1,4 +1,5 @@
 <script>
+  let email = $state('');
   let password = $state('');
   let error = $state('');
   let cargando = $state(false);
@@ -14,7 +15,7 @@
       const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ secret: password })
+        body: JSON.stringify({ email, password })
       });
       const json = await res.json();
       if (!res.ok) {
@@ -92,9 +93,15 @@
         class="space-y-3"
       >
         <input
+          type="email"
+          bind:value={email}
+          placeholder="Email"
+          class="w-full border-2 border-brand-black rounded px-3 py-2 bg-white"
+        />
+        <input
           type="password"
           bind:value={password}
-          placeholder="Clave de administrador"
+          placeholder="Contraseña"
           class="w-full border-2 border-brand-black rounded px-3 py-2 bg-white"
         />
         {#if error}

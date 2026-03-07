@@ -2,9 +2,11 @@ import { MongoClient, ObjectId } from 'mongodb';
 
 let client;
 let coll;
+let adminsColl;
 
 const DB_NAME = 'aliadosqr';
 const COLLECTION = 'usuarios';
+const ADMINS_COLLECTION = 'admins';
 
 function generarCodigo() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -30,10 +32,23 @@ export async function connect() {
   await client.connect();
   const db = client.db(DB_NAME);
   coll = db.collection(COLLECTION);
+  adminsColl = db.collection(ADMINS_COLLECTION);
   await coll.createIndex({ codigo: 1 }, { unique: true });
   await coll.createIndex({ invitanteId: 1 });
-   await coll.createIndex({ telefono: 1 });
+  await coll.createIndex({ telefono: 1 });
+  await adminsColl.createIndex({ email: 1 }, { unique: true });
   return client;
+}
+
+// --- Admins (solo para login admin, no toca lógica de usuarios) ---
+export async function crearAdmin(email, passwordHash) {
+  const doc = { email: email.trim().toLowerCase(), passwordHash, createdAt: new Date() };
+  await adminsColl.insertOne(doc);
+  return { email: doc.email };
+}
+
+export async function obtenerAdminPorEmail(email) {
+  return await adminsColl.findOne({ email: email.trim().toLowerCase() });
 }
 
 export async function crearUsuario(datos) {

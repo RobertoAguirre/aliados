@@ -1,14 +1,35 @@
 import { Router } from 'express';
-import { listarInvitations, listarUsuarios } from '../db.js';
+import bcrypt from 'bcryptjs';
+import { crearAdmin, listarInvitations, listarUsuarios, obtenerAdminPorEmail } from '../db.js';
 
 export const adminRouter = Router();
 
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
 
-adminRouter.post('/login', (req, res) => {
+function validarConSecret(req) {
+  const secret = req.body?.secret ?? req.header('x-admin-secret');
+  return ADMIN_SECRET && secret === ADMIN_SECRET;
+}
+
+adminRouter.post('/crear', async (req, res) => {
+  if (!validarConSecret(req)) return res.status(401).json({ error: 'No autorizado' });
+  const { email, password } = req.body ?? {};
+  if (!email?.trim() || !password) return res.status(400).json({ error: 'Faltan email o contraseña' });
+  const existente = await obtenerAdminPorEmail(email);
+  if (existente) return res.status(409).json({ error: 'Ya existe un admin con ese email' });
+  const passwordHash = await bcrypt.hash(password, 10);
+  await crearAdmin(email, passwordHash);
+  res.status(201).json({ ok: true, email: email.trim().toLowerCase() });
+});
+
+adminRouter.post('/login', async (req, res) => {
   if (!ADMIN_SECRET) return res.status(500).json({ error: 'ADMIN_SECRET no configurado' });
-  const { secret } = req.body ?? {};
-  if (secret !== ADMIN_SECRET) return res.status(401).json({ error: 'Credenciales inválidas' });
+  const { email, password } = req.body ?? {};
+  if (!email?.trim() || !password) return res.status(400).json({ error: 'Email y contraseña requeridos' });
+  const admin = await obtenerAdminPorEmail(email);
+  if (!admin) return res.status(401).json({ error: 'Credenciales inválidas' });
+  const ok = await bcrypt.compare(password, admin.passwordHash);
+  if (!ok) return res.status(401).json({ error: 'Credenciales inválidas' });
   res.json({ token: ADMIN_SECRET });
 });
 

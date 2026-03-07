@@ -7,11 +7,13 @@
 
 <div class="max-w-lg mx-auto px-4 py-8">
   <h1 class="text-2xl font-bold text-center mb-8">Aliados QR</h1>
-  <p class="text-center mb-6">
-    Crea tu red de colaboradores, consulta tu red e invitados, o accede al panel de administración.
-  </p>
   <p class="text-center text-sm mb-8 text-gray-700">
-    Si te compartieron un enlace o QR, ábrelo para elegir entre IMPULSA (crear tu red) o ÚNETE (unirte a una red).
+    <strong>Crear mi red</strong> — Registra tu red y obtén tu enlace y QR para invitar.  
+    <strong>Mi Red</strong> — Consulta tu red e invitados con tu código.  
+    <strong>Admin</strong> — Panel de administración.
+  </p>
+  <p class="text-center text-xs mb-6 text-gray-500">
+    Si alguien te compartió un enlace o QR, ábrelo en el navegador (no uses los botones de abajo).
   </p>
   <div class="flex flex-col gap-3">
     <a
