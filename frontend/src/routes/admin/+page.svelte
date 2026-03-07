@@ -66,6 +66,121 @@
     }
   }
 
+  function descargarCSV() {
+    if (!redes?.length) return;
+    const headers = ['Nombre', 'Código', 'Rol', 'Invitante', 'Invitados'];
+    const filas = redes.map((r) => [
+      r.nombreCompleto,
+      r.codigo,
+      r.rol,
+      r.invitanteNombre ?? '',
+      r.totalInvitados
+    ]);
+    const csv = [headers.join(','), ...filas.map((f) => f.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `redes-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  let editando = $state(null);
+  let formEdit = $state({});
+  let guardando = $state(false);
+  let cargandoEditar = $state(false);
+  let errorCargaEditar = $state('');
+  let eliminandoId = $state(null);
+
+  async function abrirEditar(r) {
+    editando = r.id;
+    modalAbiertoEn = Date.now();
+    formEdit = {};
+    errorCargaEditar = '';
+    cargandoEditar = true;
+    const token = localStorage.getItem(TOKEN_KEY);
+    try {
+      const res = await fetch(`/api/admin/usuarios/${r.id}`, { headers: { 'x-admin-token': token } });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        errorCargaEditar = j.error ?? `Error ${res.status}. Revisa la conexión o la sesión.`;
+        return;
+      }
+      const u = await res.json();
+      formEdit = {
+        nombre: u.nombre ?? '',
+        apellidoPaterno: u.apellidoPaterno ?? '',
+        apellidoMaterno: u.apellidoMaterno ?? '',
+        telefono: u.telefono ?? '',
+        fechaNacimiento: u.fechaNacimiento ?? '',
+        direccion: u.direccion ?? '',
+        rol: u.rol ?? 'impulsa'
+      };
+    } catch (e) {
+      errorCargaEditar = 'No se pudieron cargar los datos. Revisa la conexión.';
+    } finally {
+      cargandoEditar = false;
+    }
+  }
+
+  function cerrarEditar() {
+    editando = null;
+    formEdit = {};
+    errorCargaEditar = '';
+  }
+
+  let modalAbiertoEn = $state(0);
+
+  function cerrarSesion() {
+    localStorage.removeItem(TOKEN_KEY);
+    logueado = false;
+    redes = null;
+    error = '';
+  }
+
+  async function guardarEditar() {
+    guardando = true;
+    error = '';
+    try {
+      const token = localStorage.getItem(TOKEN_KEY);
+      const res = await fetch(`/api/admin/usuarios/${editando}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
+        body: JSON.stringify(formEdit)
+      });
+      if (!res.ok) {
+        const j = await res.json();
+        error = j.error ?? 'Error al guardar';
+        return;
+      }
+      cerrarEditar();
+      await cargarRedes();
+    } finally {
+      guardando = false;
+    }
+  }
+
+  async function eliminar(r) {
+    if (!confirm(`¿Eliminar a ${r.nombreCompleto}?`)) return;
+    eliminandoId = r.id;
+    error = '';
+    try {
+      const token = localStorage.getItem(TOKEN_KEY);
+      const res = await fetch(`/api/admin/usuarios/${r.id}`, {
+        method: 'DELETE',
+        headers: { 'x-admin-token': token }
+      });
+      if (!res.ok) {
+        const j = await res.json();
+        error = j.error ?? 'Error al eliminar';
+        return;
+      }
+      await cargarRedes();
+    } finally {
+      eliminandoId = null;
+    }
+  }
+
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem(TOKEN_KEY);
     if (token) {
@@ -118,15 +233,32 @@
     </div>
   {:else}
     <div class="bg-white border-2 border-brand-black rounded-lg p-4">
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
         <h2 class="font-semibold">Resumen de redes</h2>
-        <button
-          type="button"
-          onclick={cargarRedes}
-          class="px-3 py-1 text-sm border border-brand-black rounded bg-brand-blue text-white hover:opacity-90"
-        >
-          Actualizar
-        </button>
+        <div class="flex gap-2">
+          <button
+            type="button"
+            onclick={descargarCSV}
+            disabled={!redes?.length}
+            class="px-3 py-1 text-sm border border-brand-black rounded bg-white hover:bg-gray-100 disabled:opacity-50"
+          >
+            Descargar CSV
+          </button>
+          <button
+            type="button"
+            onclick={cargarRedes}
+            class="px-3 py-1 text-sm border border-brand-black rounded bg-brand-blue text-white hover:opacity-90"
+          >
+            Actualizar
+          </button>
+          <button
+            type="button"
+            onclick={cerrarSesion}
+            class="px-3 py-1 text-sm border border-brand-black rounded bg-white hover:bg-gray-100"
+          >
+            Cerrar sesión
+          </button>
+        </div>
       </div>
       {#if error}
         <p class="text-red-800 text-sm mb-2">{error}</p>
@@ -143,6 +275,7 @@
                 <th class="border border-brand-black px-2 py-1 text-left">Rol</th>
                 <th class="border border-brand-black px-2 py-1 text-left">Invitante</th>
                 <th class="border border-brand-black px-2 py-1 text-right">Invitados</th>
+                <th class="border border-brand-black px-2 py-1 text-center">Editar y Eliminar</th>
               </tr>
             </thead>
             <tbody>
@@ -153,6 +286,23 @@
                   <td class="border border-brand-black px-2 py-1 capitalize">{r.rol}</td>
                   <td class="border border-brand-black px-2 py-1">{r.invitanteNombre ?? '—'}</td>
                   <td class="border border-brand-black px-2 py-1 text-right">{r.totalInvitados}</td>
+                  <td class="border border-brand-black px-2 py-1 text-center">
+                    <button
+                      type="button"
+                      onclick={() => abrirEditar(r)}
+                      class="px-2 py-0.5 text-xs border border-brand-black rounded bg-white hover:bg-gray-100"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      onclick={() => eliminar(r)}
+                      disabled={eliminandoId === r.id}
+                      class="px-2 py-0.5 text-xs border border-brand-black rounded bg-white hover:bg-red-50 text-red-800 disabled:opacity-50 ml-1"
+                    >
+                      {eliminandoId === r.id ? '…' : 'Eliminar'}
+                    </button>
+                  </td>
                 </tr>
               {/each}
             </tbody>
@@ -160,6 +310,47 @@
         </div>
       {/if}
     </div>
+
+    {#if editando}
+      <div
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-titulo"
+        onclick={(e) => {
+          if (e.target !== e.currentTarget) return;
+          if (Date.now() - modalAbiertoEn < 300) return;
+          cerrarEditar();
+        }}
+      >
+        <div class="bg-white border-2 border-brand-black rounded-lg p-4 max-w-md w-full shadow-lg" onclick={(e) => e.stopPropagation()}>
+          <h3 id="modal-titulo" class="font-semibold mb-3">Editar persona</h3>
+          {#if cargandoEditar}
+            <p class="text-sm text-gray-600">Cargando datos…</p>
+          {:else if errorCargaEditar}
+            <p class="text-sm text-red-800 mb-3">{errorCargaEditar}</p>
+            <button type="button" onclick={cerrarEditar} class="px-3 py-1 border border-brand-black rounded bg-white">Cerrar</button>
+          {:else}
+            <form onsubmit={(e) => { e.preventDefault(); guardarEditar(); }} class="space-y-2">
+              <input type="text" bind:value={formEdit.nombre} placeholder="Nombre" class="w-full border border-brand-black rounded px-2 py-1" />
+              <input type="text" bind:value={formEdit.apellidoPaterno} placeholder="Apellido paterno" class="w-full border border-brand-black rounded px-2 py-1" />
+              <input type="text" bind:value={formEdit.apellidoMaterno} placeholder="Apellido materno" class="w-full border border-brand-black rounded px-2 py-1" />
+              <input type="text" bind:value={formEdit.telefono} placeholder="Teléfono" class="w-full border border-brand-black rounded px-2 py-1" />
+              <input type="text" bind:value={formEdit.fechaNacimiento} placeholder="Fecha nacimiento" class="w-full border border-brand-black rounded px-2 py-1" />
+              <input type="text" bind:value={formEdit.direccion} placeholder="Dirección" class="w-full border border-brand-black rounded px-2 py-1" />
+              <select bind:value={formEdit.rol} class="w-full border border-brand-black rounded px-2 py-1">
+                <option value="impulsa">Impulsa</option>
+                <option value="unete">Unete</option>
+              </select>
+              <div class="flex gap-2 mt-3">
+                <button type="button" onclick={cerrarEditar} class="px-3 py-1 border border-brand-black rounded bg-white">Cancelar</button>
+                <button type="submit" disabled={guardando} class="px-3 py-1 bg-brand-blue text-white rounded border border-brand-black disabled:opacity-50">{guardando ? 'Guardando…' : 'Guardar'}</button>
+              </div>
+            </form>
+          {/if}
+        </div>
+      </div>
+    {/if}
   {/if}
 </div>
 

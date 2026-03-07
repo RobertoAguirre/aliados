@@ -106,3 +106,25 @@ export async function listarUsuarios() {
   const docs = await coll.find({}).toArray();
   return docs.map(docToUsuario);
 }
+
+const CAMPOS_EDITABLES = ['nombre', 'apellidoPaterno', 'apellidoMaterno', 'telefono', 'fechaNacimiento', 'direccion', 'lat', 'lng', 'rol'];
+
+export async function actualizarUsuario(id, datos) {
+  if (!ObjectId.isValid(id)) return null;
+  if (datos.rol !== undefined && !['impulsa', 'unete'].includes(datos.rol)) return null;
+  const update = {};
+  for (const key of CAMPOS_EDITABLES) {
+    if (datos[key] === undefined) continue;
+    update[key] = typeof datos[key] === 'string' ? datos[key].trim() : datos[key];
+  }
+  if (Object.keys(update).length === 0) return await obtenerPorId(id);
+  await coll.updateOne({ _id: new ObjectId(id) }, { $set: update });
+  return await obtenerPorId(id);
+}
+
+export async function eliminarUsuario(id) {
+  if (!ObjectId.isValid(id)) return false;
+  await coll.updateMany({ invitanteId: new ObjectId(id) }, { $set: { invitanteId: null } });
+  const r = await coll.deleteOne({ _id: new ObjectId(id) });
+  return r.deletedCount === 1;
+}

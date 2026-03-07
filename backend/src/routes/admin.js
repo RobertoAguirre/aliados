@@ -1,6 +1,14 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
-import { crearAdmin, listarInvitations, listarUsuarios, obtenerAdminPorEmail } from '../db.js';
+import {
+  actualizarUsuario,
+  crearAdmin,
+  eliminarUsuario,
+  listarInvitations,
+  listarUsuarios,
+  obtenerAdminPorEmail,
+  obtenerPorId
+} from '../db.js';
 
 export const adminRouter = Router();
 
@@ -61,5 +69,30 @@ adminRouter.get('/redes', async (req, res) => {
   }
 
   res.json(resultado);
+});
+
+function requireAdmin(req, res, next) {
+  if (!ADMIN_SECRET) return res.status(500).json({ error: 'ADMIN_SECRET no configurado' });
+  const token = req.header('x-admin-token');
+  if (token !== ADMIN_SECRET) return res.status(401).json({ error: 'No autorizado' });
+  next();
+}
+
+adminRouter.get('/usuarios/:id', requireAdmin, async (req, res) => {
+  const usuario = await obtenerPorId(req.params.id);
+  if (!usuario) return res.status(404).json({ error: 'No encontrado' });
+  res.json(usuario);
+});
+
+adminRouter.put('/usuarios/:id', requireAdmin, async (req, res) => {
+  const usuario = await actualizarUsuario(req.params.id, req.body);
+  if (!usuario) return res.status(404).json({ error: 'No encontrado' });
+  res.json(usuario);
+});
+
+adminRouter.delete('/usuarios/:id', requireAdmin, async (req, res) => {
+  const ok = await eliminarUsuario(req.params.id);
+  if (!ok) return res.status(404).json({ error: 'No encontrado' });
+  res.status(204).end();
 });
 
