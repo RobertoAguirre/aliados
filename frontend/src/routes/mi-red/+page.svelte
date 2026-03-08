@@ -97,8 +97,12 @@
       {:else}
         <ul class="space-y-2">
           {#each red.invitados as inv}
-            <li class="text-sm border-b border-gray-200 pb-2">
-              {inv.nombre} {inv.apellidoPaterno} — {inv.rol}
+            <li class="text-sm border-b border-gray-200 pb-2 text-gray-700">
+              {inv.nombre} {inv.apellidoPaterno}{#if inv.apellidoMaterno} {inv.apellidoMaterno}{/if}
+              — <span class="capitalize">{inv.rol}</span>
+              {#if inv.rol === 'impulsa' && inv.codigo}
+                — <span class="font-medium text-brand-black">{inv.codigo}</span>
+              {/if}
             </li>
           {/each}
         </ul>

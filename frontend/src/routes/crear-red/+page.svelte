@@ -60,6 +60,23 @@
     const href = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
     window.open(href, '_blank');
   }
+
+  async function ubicarEnMapa() {
+    const q = form.direccion?.trim();
+    if (!q) return;
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`,
+        { headers: { 'User-Agent': 'AliadosQR/1.0' } }
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data[0]) {
+        form.lat = parseFloat(data[0].lat);
+        form.lng = parseFloat(data[0].lon);
+      }
+    } catch (_) {}
+  }
 </script>
 
 <svelte:head>
@@ -129,10 +146,13 @@
         </div>
         <label class="block">
           <span class="block text-sm font-medium mb-1">DIRECCIÓN</span>
-          <input type="text" bind:value={form.direccion} required class="w-full border-2 border-brand-black rounded px-3 py-2 bg-white" placeholder="ESCRIBE AQUÍ TU DIRECCIÓN" />
+          <div class="flex gap-2">
+            <input type="text" bind:value={form.direccion} required class="flex-1 border-2 border-brand-black rounded px-3 py-2 bg-white" placeholder="ESCRIBE AQUÍ TU DIRECCIÓN" />
+            <button type="button" onclick={ubicarEnMapa} class="px-3 py-2 text-sm font-medium border-2 border-brand-black rounded bg-white hover:bg-gray-100 whitespace-nowrap">Ubicar en mapa</button>
+          </div>
         </label>
         <div class="rounded overflow-hidden border border-brand-black/30 h-32">
-          <LeafletMap bind:lat={form.lat} bind:lng={form.lng} />
+          <LeafletMap bind:lat={form.lat} bind:lng={form.lng} bind:direccion={form.direccion} />
         </div>
         {#if error}<p class="text-red-800 text-sm">{error}</p>{/if}
         <button type="submit" disabled={enviando} class="w-full py-3 font-bold bg-brand-blue text-white rounded border-2 border-brand-black hover:opacity-90 disabled:opacity-50">

@@ -3,6 +3,7 @@
 
   export let lat;
   export let lng;
+  export let direccion = '';
   export let zoom = 13;
 
   let container;
@@ -10,8 +11,9 @@
   let marker;
   let L;
 
-  const DEFAULT_LAT = 28.6353; // Chihuahua aprox.
+  const DEFAULT_LAT = 28.6353;
   const DEFAULT_LNG = -106.0889;
+  const NOMINATIM_HEADERS = { 'User-Agent': 'AliadosQR/1.0' };
 
   function currentCoords() {
     const la = typeof lat === 'number' ? lat : DEFAULT_LAT;
@@ -19,9 +21,29 @@
     return [la, ln];
   }
 
-  $: if (map && marker && typeof lat === 'number' && typeof lng === 'number') {
+  async function reverseGeocode(la, ln) {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${la}&lon=${ln}&format=json`,
+        { headers: NOMINATIM_HEADERS }
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.display_name) direccion = data.display_name;
+    } catch (_) {}
+  }
+
+  function updatePosition(la, ln) {
+    lat = la;
+    lng = ln;
+    if (marker) marker.setLatLng([la, ln]);
+    reverseGeocode(la, ln);
+  }
+
+  $: if (map && marker && L && typeof lat === 'number' && typeof lng === 'number') {
     const pos = L.latLng(lat, lng);
     marker.setLatLng(pos);
+    map.setView([lat, lng], map.getZoom());
   }
 
   onMount(async () => {
@@ -43,15 +65,12 @@
     marker = L.marker([la, ln], { draggable: true }).addTo(map);
 
     map.on('click', (event) => {
-      lat = event.latlng.lat;
-      lng = event.latlng.lng;
-      marker.setLatLng([lat, lng]);
+      updatePosition(event.latlng.lat, event.latlng.lng);
     });
 
     marker.on('dragend', () => {
       const pos = marker.getLatLng();
-      lat = pos.lat;
-      lng = pos.lng;
+      updatePosition(pos.lat, pos.lng);
     });
   });
 
