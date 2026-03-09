@@ -10,7 +10,7 @@
 </script>
 
 <svelte:head>
-  <title>Elige tu opción — Aliados QR</title>
+  <title>Elige tu opción — RedMadre</title>
 </svelte:head>
 
 {#if !referente}

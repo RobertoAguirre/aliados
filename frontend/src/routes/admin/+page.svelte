@@ -191,7 +191,7 @@
 </script>
 
 <svelte:head>
-  <title>Admin — Aliados QR</title>
+  <title>Admin — RedMadre</title>
 </svelte:head>
 
 <div class="max-w-4xl mx-auto px-4 py-8">

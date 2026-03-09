@@ -45,7 +45,7 @@
 </script>
 
 <svelte:head>
-  <title>Mi Red — Aliados QR</title>
+  <title>Mi Red — RedMadre</title>
 </svelte:head>
 
 <div class="max-w-lg mx-auto px-4 py-8">

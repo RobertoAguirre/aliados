@@ -89,7 +89,7 @@
 </script>
 
 <svelte:head>
-  <title>Datos de registro — Aliados QR</title>
+  <title>Datos de registro — RedMadre</title>
 </svelte:head>
 
 <div class="max-w-lg mx-auto px-4 py-6">

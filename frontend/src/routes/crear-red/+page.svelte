@@ -80,7 +80,7 @@
 </script>
 
 <svelte:head>
-  <title>Crear mi red — Aliados QR</title>
+  <title>Crear mi red — RedMadre</title>
 </svelte:head>
 
 <div class="max-w-lg mx-auto px-4 py-6">

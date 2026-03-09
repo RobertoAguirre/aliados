@@ -5,7 +5,7 @@ export default {
   plugins: [tailwindcss(), sveltekit()],
   server: {
     proxy: {
-      '/api': { target: 'http://localhost:3001', changeOrigin: true }
+      '/api': { target: 'https://aliados-maqp.onrender.com', changeOrigin: true }
     }
   }
 };
