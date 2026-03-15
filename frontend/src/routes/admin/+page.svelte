@@ -223,34 +223,41 @@
   <h1 class="text-2xl font-bold mb-4">Admin — Redes</h1>
 
   {#if !logueado}
-    <div class="max-w-sm bg-white border-2 border-brand-black rounded-lg p-6">
-      <h2 class="font-semibold mb-3">Iniciar sesión</h2>
+    <div class="max-w-sm mx-auto mt-8 bg-white rounded-xl shadow-lg border border-gray-200 p-8">
+      <h2 class="text-lg font-semibold text-gray-800 mb-1">Iniciar sesión</h2>
+      <p class="text-sm text-gray-500 mb-6">Admin o auditor</p>
       <form
         onsubmit={(e) => {
           e.preventDefault();
           login();
         }}
-        class="space-y-3"
+        class="space-y-4"
       >
-        <input
-          type="email"
-          bind:value={email}
-          placeholder="Email"
-          class="w-full border-2 border-brand-black rounded px-3 py-2 bg-white"
-        />
-        <input
-          type="password"
-          bind:value={password}
-          placeholder="Contraseña"
-          class="w-full border-2 border-brand-black rounded px-3 py-2 bg-white"
-        />
+        <label class="block">
+          <span class="sr-only">Email</span>
+          <input
+            type="email"
+            bind:value={email}
+            placeholder="Email"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent transition-shadow"
+          />
+        </label>
+        <label class="block">
+          <span class="sr-only">Contraseña</span>
+          <input
+            type="password"
+            bind:value={password}
+            placeholder="Contraseña"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent transition-shadow"
+          />
+        </label>
         {#if error}
-          <p class="text-red-800 text-sm">{error}</p>
+          <p class="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
         {/if}
         <button
           type="submit"
           disabled={cargando}
-          class="w-full py-2 font-bold bg-brand-blue text-white rounded border-2 border-brand-black disabled:opacity-50"
+          class="w-full py-3 font-semibold bg-brand-blue text-white rounded-lg shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:ring-offset-2 disabled:opacity-50 transition-opacity"
         >
           {cargando ? 'Entrando…' : 'Entrar'}
         </button>
