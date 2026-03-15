@@ -107,10 +107,28 @@ export async function listarUsuarios() {
   return docs.map(docToUsuario);
 }
 
-export async function listarUsuariosPaginado(skip, limit) {
+function filtroBusqueda(busqueda) {
+  if (!busqueda || typeof busqueda !== 'string') return {};
+  const q = busqueda.trim();
+  if (!q) return {};
+  const esc = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(esc, 'i');
+  return {
+    $or: [
+      { nombre: re },
+      { apellidoPaterno: re },
+      { apellidoMaterno: re },
+      { codigo: re },
+      { rol: re }
+    ]
+  };
+}
+
+export async function listarUsuariosPaginado(skip, limit, busqueda = null) {
+  const filter = filtroBusqueda(busqueda);
   const [docs, total] = await Promise.all([
-    coll.find({}).skip(skip).limit(limit).toArray(),
-    coll.countDocuments({})
+    coll.find(filter).skip(skip).limit(limit).toArray(),
+    coll.countDocuments(filter)
   ]);
   return { usuarios: docs.map(docToUsuario), total };
 }

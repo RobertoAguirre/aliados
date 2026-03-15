@@ -59,8 +59,9 @@ adminRouter.get('/redes', async (req, res) => {
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
   const limit = Math.min(100, Math.max(5, parseInt(req.query.limit, 10) || 25));
   const skip = (page - 1) * limit;
+  const busqueda = typeof req.query.busqueda === 'string' ? req.query.busqueda.trim() : null;
 
-  const { usuarios, total } = await listarUsuariosPaginado(skip, limit);
+  const { usuarios, total } = await listarUsuariosPaginado(skip, limit, busqueda || null);
   const porId = new Map(usuarios.map((u) => [u.id, u]));
   const resultado = [];
 

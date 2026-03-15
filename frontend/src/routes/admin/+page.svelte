@@ -41,7 +41,7 @@
     }
   }
 
-  async function cargarRedes(paginaActual = pagina, limite = porPagina) {
+  async function cargarRedes(paginaActual = pagina, limite = porPagina, textoBusqueda = busqueda) {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) {
       logueado = false;
@@ -50,8 +50,10 @@
     }
     cargando = true;
     error = '';
+    const params = new URLSearchParams({ page: String(paginaActual), limit: String(limite) });
+    if (textoBusqueda?.trim()) params.set('busqueda', textoBusqueda.trim());
     try {
-      const res = await fetch(`/api/admin/redes?page=${paginaActual}&limit=${limite}`, {
+      const res = await fetch(`/api/admin/redes?${params}`, {
         headers: { 'x-admin-token': token }
       });
       if (res.status === 401) {
@@ -82,7 +84,9 @@
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return;
     try {
-      const res = await fetch('/api/admin/redes?page=1&limit=10000', { headers: { 'x-admin-token': token } });
+      const params = new URLSearchParams({ page: '1', limit: '10000' });
+      if (busqueda?.trim()) params.set('busqueda', busqueda.trim());
+      const res = await fetch(`/api/admin/redes?${params}`, { headers: { 'x-admin-token': token } });
       if (!res.ok) return;
       const json = await res.json();
       const list = json.datos ?? json;
@@ -112,20 +116,14 @@
   let errorCargaEditar = $state('');
   let eliminandoId = $state(null);
   let busqueda = $state('');
+  let inputBusquedaRef = $state(null);
 
-  const redesFiltradas = $derived.by(() => {
-    const list = redes ?? [];
-    const q = busqueda.trim().toLowerCase();
-    if (!q) return list;
-    return list.filter(
-      (r) =>
-        (r.nombreCompleto ?? '').toLowerCase().includes(q) ||
-        (r.codigo ?? '').toLowerCase().includes(q) ||
-        (r.rol ?? '').toLowerCase().includes(q) ||
-        (r.invitanteNombre ?? '').toLowerCase().includes(q) ||
-        String(r.totalInvitados ?? '').includes(q)
-    );
-  });
+  function ejecutarBusqueda() {
+    const q = (inputBusquedaRef?.value ?? busqueda ?? '').trim();
+    busqueda = q;
+    pagina = 1;
+    cargarRedes(1, porPagina, q);
+  }
 
   const totalPaginas = $derived(porPagina > 0 ? Math.max(1, Math.ceil(totalRegistros / porPagina)) : 1);
   const desde = $derived(totalRegistros === 0 ? 0 : (pagina - 1) * porPagina + 1);
@@ -322,12 +320,28 @@
         <p class="text-sm text-gray-600">{cargando ? 'Cargando…' : 'Sin datos aún.'}</p>
       {:else}
         <div class="flex flex-wrap items-center gap-4 mb-3">
-          <input
-            type="search"
-            bind:value={busqueda}
-            placeholder="Buscar en esta página…"
-            class="w-full max-w-sm border-2 border-brand-black rounded px-3 py-1.5 text-sm"
-          />
+          <div class="flex items-center gap-2">
+            <input
+              type="search"
+              bind:this={inputBusquedaRef}
+              bind:value={busqueda}
+              placeholder="Buscar en todos los registros…"
+              onkeydown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  ejecutarBusqueda();
+                }
+              }}
+              class="w-64 border border-gray-300 rounded px-3 py-1.5 text-sm"
+            />
+            <button
+              type="button"
+              onclick={ejecutarBusqueda}
+              class="px-3 py-1.5 text-sm border border-gray-300 rounded bg-white text-gray-700 hover:bg-gray-50"
+            >
+              Buscar
+            </button>
+          </div>
           <div class="flex items-center gap-2 text-sm text-gray-600">
             <label class="flex items-center gap-1.5">
               <span>Registros por página</span>
@@ -336,7 +350,7 @@
                 onchange={(e) => {
                   porPagina = parseInt(e.currentTarget.value, 10);
                   pagina = 1;
-                  cargarRedes(1, porPagina);
+                  cargarRedes(1, porPagina, busqueda);
                 }}
                 class="border border-gray-300 rounded px-2 py-1 bg-white text-sm"
               >
@@ -363,12 +377,14 @@
               </tr>
             </thead>
             <tbody>
-              {#if busqueda.trim() && redesFiltradas.length === 0}
+              {#if (redes?.length ?? 0) === 0}
                 <tr>
-                  <td colspan={esSoloLectura ? 5 : 6} class="border border-brand-black px-2 py-3 text-center text-gray-600">Ningún registro coincide con la búsqueda.</td>
+                  <td colspan={esSoloLectura ? 5 : 6} class="border border-brand-black px-2 py-3 text-center text-gray-600">
+                    {totalRegistros === 0 && busqueda.trim() ? 'Ningún registro coincide con la búsqueda.' : 'Sin registros.'}
+                  </td>
                 </tr>
               {:else}
-                {#each redesFiltradas as r}
+                {#each redes as r}
                 <tr>
                   <td class="border border-brand-black px-2 py-1">{r.nombreCompleto}</td>
                   <td class="border border-brand-black px-2 py-1">{r.codigo}</td>
@@ -418,7 +434,7 @@
               onclick={() => {
                 if (pagina <= 1) return;
                 pagina--;
-                cargarRedes(pagina, porPagina);
+                cargarRedes(pagina, porPagina, busqueda);
               }}
               class="px-3 py-1.5 border border-gray-300 rounded bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
             >
@@ -431,7 +447,7 @@
               onclick={() => {
                 if (pagina >= totalPaginas) return;
                 pagina++;
-                cargarRedes(pagina, porPagina);
+                cargarRedes(pagina, porPagina, busqueda);
               }}
               class="px-3 py-1.5 border border-gray-300 rounded bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
             >
