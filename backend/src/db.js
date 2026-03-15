@@ -107,6 +107,14 @@ export async function listarUsuarios() {
   return docs.map(docToUsuario);
 }
 
+export async function listarUsuariosPaginado(skip, limit) {
+  const [docs, total] = await Promise.all([
+    coll.find({}).skip(skip).limit(limit).toArray(),
+    coll.countDocuments({})
+  ]);
+  return { usuarios: docs.map(docToUsuario), total };
+}
+
 const CAMPOS_EDITABLES = ['nombre', 'apellidoPaterno', 'apellidoMaterno', 'telefono', 'fechaNacimiento', 'direccion', 'lat', 'lng', 'rol'];
 
 export async function actualizarUsuario(id, datos) {

@@ -4,6 +4,9 @@
   let error = $state('');
   let cargando = $state(false);
   let redes = $state(null);
+  let totalRegistros = $state(0);
+  let pagina = $state(1);
+  let porPagina = $state(25);
   let logueado = $state(false);
   let role = $state('');
 
@@ -38,7 +41,7 @@
     }
   }
 
-  async function cargarRedes() {
+  async function cargarRedes(paginaActual = pagina, limite = porPagina) {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) {
       logueado = false;
@@ -48,7 +51,7 @@
     cargando = true;
     error = '';
     try {
-      const res = await fetch('/api/admin/redes', {
+      const res = await fetch(`/api/admin/redes?page=${paginaActual}&limit=${limite}`, {
         headers: { 'x-admin-token': token }
       });
       if (res.status === 401) {
@@ -65,7 +68,8 @@
         error = json.error ?? 'No se pudo cargar la información';
         return;
       }
-      redes = json;
+      redes = json.datos ?? json;
+      totalRegistros = json.total ?? redes.length;
       logueado = true;
     } catch (e) {
       error = 'Error de conexión';
@@ -74,23 +78,31 @@
     }
   }
 
-  function descargarCSV() {
-    if (!redes?.length) return;
-    const headers = ['Nombre', 'Código', 'Rol', 'Invitante', 'Invitados'];
-    const filas = redes.map((r) => [
-      r.nombreCompleto,
-      r.codigo,
-      r.rol,
-      r.invitanteNombre ?? '',
-      r.totalInvitados
-    ]);
-    const csv = [headers.join(','), ...filas.map((f) => f.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
-    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `redes-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(a.href);
+  async function descargarCSV() {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return;
+    try {
+      const res = await fetch('/api/admin/redes?page=1&limit=10000', { headers: { 'x-admin-token': token } });
+      if (!res.ok) return;
+      const json = await res.json();
+      const list = json.datos ?? json;
+      if (!list?.length) return;
+      const headers = ['Nombre', 'Código', 'Rol', 'Invitante', 'Invitados'];
+      const filas = list.map((r) => [
+        r.nombreCompleto,
+        r.codigo,
+        r.rol,
+        r.invitanteNombre ?? '',
+        r.totalInvitados
+      ]);
+      const csv = [headers.join(','), ...filas.map((f) => f.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `redes-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (_) {}
   }
 
   let editando = $state(null);
@@ -114,6 +126,10 @@
         String(r.totalInvitados ?? '').includes(q)
     );
   });
+
+  const totalPaginas = $derived(porPagina > 0 ? Math.max(1, Math.ceil(totalRegistros / porPagina)) : 1);
+  const desde = $derived(totalRegistros === 0 ? 0 : (pagina - 1) * porPagina + 1);
+  const hasta = $derived(Math.min(pagina * porPagina, totalRegistros));
 
   async function abrirEditar(r) {
     editando = r.id;
@@ -220,10 +236,9 @@
 </svelte:head>
 
 <div class="max-w-4xl mx-auto px-4 py-8">
-  <h1 class="text-2xl font-bold mb-4">Admin — Redes</h1>
-
   {#if !logueado}
-    <div class="max-w-sm mx-auto mt-8 bg-white rounded-xl shadow-lg border border-gray-200 p-8">
+    <h1 class="text-xl font-bold text-center text-gray-800 mb-2 pt-4">RedMadre.org</h1>
+    <div class="max-w-sm mx-auto mt-6 bg-white rounded-xl shadow-lg border border-gray-200 p-8">
       <h2 class="text-lg font-semibold text-gray-800 mb-1">Iniciar sesión</h2>
       <p class="text-sm text-gray-500 mb-6">Admin o auditor</p>
       <form
@@ -306,12 +321,33 @@
       {#if !redes}
         <p class="text-sm text-gray-600">{cargando ? 'Cargando…' : 'Sin datos aún.'}</p>
       {:else}
-        <input
-          type="search"
-          bind:value={busqueda}
-          placeholder="Buscar en toda la tabla…"
-          class="w-full max-w-sm mb-3 border-2 border-brand-black rounded px-3 py-1.5 text-sm"
-        />
+        <div class="flex flex-wrap items-center gap-4 mb-3">
+          <input
+            type="search"
+            bind:value={busqueda}
+            placeholder="Buscar en esta página…"
+            class="w-full max-w-sm border-2 border-brand-black rounded px-3 py-1.5 text-sm"
+          />
+          <div class="flex items-center gap-2 text-sm text-gray-600">
+            <label class="flex items-center gap-1.5">
+              <span>Registros por página</span>
+              <select
+                value={porPagina}
+                onchange={(e) => {
+                  porPagina = parseInt(e.currentTarget.value, 10);
+                  pagina = 1;
+                  cargarRedes(1, porPagina);
+                }}
+                class="border border-gray-300 rounded px-2 py-1 bg-white text-sm"
+              >
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+              </select>
+            </label>
+            <span class="text-gray-500">Mostrando {desde}–{hasta} de {totalRegistros}</span>
+          </div>
+        </div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm border-collapse">
             <thead>
@@ -374,6 +410,35 @@
             </tbody>
           </table>
         </div>
+        {#if totalRegistros > 0}
+          <div class="flex items-center justify-between mt-3 text-sm">
+            <button
+              type="button"
+              disabled={pagina <= 1 || cargando}
+              onclick={() => {
+                if (pagina <= 1) return;
+                pagina--;
+                cargarRedes(pagina, porPagina);
+              }}
+              class="px-3 py-1.5 border border-gray-300 rounded bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
+            >
+              Anterior
+            </button>
+            <span class="text-gray-600">Página {pagina} de {totalPaginas}</span>
+            <button
+              type="button"
+              disabled={pagina >= totalPaginas || cargando}
+              onclick={() => {
+                if (pagina >= totalPaginas) return;
+                pagina++;
+                cargarRedes(pagina, porPagina);
+              }}
+              class="px-3 py-1.5 border border-gray-300 rounded bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
+            >
+              Siguiente
+            </button>
+          </div>
+        {/if}
       {/if}
     </div>
 

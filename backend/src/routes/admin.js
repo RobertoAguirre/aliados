@@ -6,7 +6,7 @@ import {
   crearAdmin,
   eliminarUsuario,
   listarInvitations,
-  listarUsuarios,
+  listarUsuariosPaginado,
   obtenerAdminPorEmail,
   obtenerPorId
 } from '../db.js';
@@ -56,7 +56,11 @@ adminRouter.get('/redes', async (req, res) => {
   const token = req.header('x-admin-token');
   if (!tokenValido(token)) return res.status(401).json({ error: 'No autorizado' });
 
-  const usuarios = await listarUsuarios();
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(100, Math.max(5, parseInt(req.query.limit, 10) || 25));
+  const skip = (page - 1) * limit;
+
+  const { usuarios, total } = await listarUsuariosPaginado(skip, limit);
   const porId = new Map(usuarios.map((u) => [u.id, u]));
   const resultado = [];
 
@@ -78,7 +82,7 @@ adminRouter.get('/redes', async (req, res) => {
     });
   }
 
-  res.json(resultado);
+  res.json({ datos: resultado, total });
 });
 
 function requireAdmin(req, res, next) {
