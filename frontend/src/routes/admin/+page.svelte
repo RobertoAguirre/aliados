@@ -80,9 +80,12 @@
     }
   }
 
+  let generandoCSV = $state(false);
+
   async function descargarCSV() {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return;
+    generandoCSV = true;
     try {
       const params = new URLSearchParams({ page: '1', limit: '500000' });
       const res = await fetch(`/api/admin/redes?${params}`, { headers: { 'x-admin-token': token } });
@@ -106,6 +109,9 @@
       a.click();
       URL.revokeObjectURL(a.href);
     } catch (_) {}
+    finally {
+      generandoCSV = false;
+    }
   }
 
   let editando = $state(null);
@@ -496,6 +502,14 @@
               </div>
             </form>
           {/if}
+        </div>
+      </div>
+    {/if}
+
+    {#if generandoCSV}
+      <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" aria-live="polite" aria-busy="true">
+        <div class="bg-white rounded-lg shadow-lg px-8 py-6 text-center">
+          <p class="text-gray-800 font-medium">Generando CSV, espere un momento…</p>
         </div>
       </div>
     {/if}
