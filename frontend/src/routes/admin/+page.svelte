@@ -84,8 +84,7 @@
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return;
     try {
-      const params = new URLSearchParams({ page: '1', limit: '10000' });
-      if (busqueda?.trim()) params.set('busqueda', busqueda.trim());
+      const params = new URLSearchParams({ page: '1', limit: '500000' });
       const res = await fetch(`/api/admin/redes?${params}`, { headers: { 'x-admin-token': token } });
       if (!res.ok) return;
       const json = await res.json();
@@ -277,6 +276,7 @@
       </form>
     </div>
   {:else}
+    <h1 class="text-xl font-bold text-gray-800 mb-4">RedMadre.org</h1>
     <div class="bg-white border-2 border-brand-black rounded-lg p-4">
       <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
         <h2 class="font-semibold">Resumen de redes</h2>
@@ -360,6 +360,7 @@
               </select>
             </label>
             <span class="text-gray-500">Mostrando {desde}–{hasta} de {totalRegistros}</span>
+            <span class="text-gray-700 font-medium">Total de registros: {totalRegistros}</span>
           </div>
         </div>
         <div class="overflow-x-auto">
