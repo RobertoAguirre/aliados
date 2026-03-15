@@ -209,7 +209,6 @@
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem(TOKEN_KEY);
     if (token) {
-      logueado = true;
       role = localStorage.getItem(ROLE_KEY) ?? 'admin';
       cargarRedes();
     }
