@@ -315,7 +315,7 @@
                 <th class="border border-brand-black px-2 py-1 text-left">Invitante</th>
                 <th class="border border-brand-black px-2 py-1 text-right">Invitados</th>
                 {#if !esSoloLectura}
-                  <th class="border border-brand-black px-2 py-1 text-center">Editar y Eliminar</th>
+                  <th class="border border-brand-black px-2 py-1 text-center w-40 min-w-[10rem]">Acciones</th>
                 {/if}
               </tr>
             </thead>
@@ -333,22 +333,32 @@
                   <td class="border border-brand-black px-2 py-1">{r.invitanteNombre ?? '—'}</td>
                   <td class="border border-brand-black px-2 py-1 text-right">{r.totalInvitados}</td>
                   {#if !esSoloLectura}
-                    <td class="border border-brand-black px-2 py-1 text-center">
-                      <button
-                        type="button"
-                        onclick={() => abrirEditar(r)}
-                        class="px-2 py-0.5 text-xs border border-brand-black rounded bg-white hover:bg-gray-100"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        onclick={() => eliminar(r)}
-                        disabled={eliminandoId === r.id}
-                        class="px-2 py-0.5 text-xs border border-brand-black rounded bg-white hover:bg-red-50 text-red-800 disabled:opacity-50 ml-1"
-                      >
-                        {eliminandoId === r.id ? '…' : 'Eliminar'}
-                      </button>
+                    <td class="border border-brand-black px-2 py-1.5 text-center w-40 min-w-[10rem]">
+                      <div class="flex items-center justify-center gap-1.5">
+                        <button
+                          type="button"
+                          onclick={() => abrirEditar(r)}
+                          class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded border border-blue-300 bg-blue-50 text-blue-800 hover:bg-blue-100 transition-colors"
+                          title="Editar"
+                        >
+                          <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                          </svg>
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          onclick={() => eliminar(r)}
+                          disabled={eliminandoId === r.id}
+                          class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded border border-red-300 bg-red-50 text-red-800 hover:bg-red-100 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                          title="Eliminar"
+                        >
+                          <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          {eliminandoId === r.id ? '…' : 'Eliminar'}
+                        </button>
+                      </div>
                     </td>
                   {/if}
                 </tr>
