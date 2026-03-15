@@ -1,0 +1,12 @@
+# Entorno y secretos (nunca subir)
+.env
+backend/.env
+*.env.local
+
+# Dependencias
+node_modules/
+
+# Build / generados
+.svelte-kit/
+build/
+dist/

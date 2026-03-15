@@ -3,6 +3,13 @@ import { crearUsuario, obtenerPorCodigo, obtenerPorId, listarInvitations, obtene
 
 export const usuariosRouter = Router();
 
+/** Campos que el cliente muestra en rutas públicas (mi-red, etc.); no exponer PII extra. */
+function soloCamposPublicos(u) {
+  if (!u) return null;
+  const { id, codigo, nombre, apellidoPaterno, apellidoMaterno, rol } = u;
+  return { id, codigo, nombre, apellidoPaterno, apellidoMaterno, rol };
+}
+
 usuariosRouter.post('/', async (req, res) => {
   const body = req.body;
   const required = ['nombre', 'apellidoPaterno', 'apellidoMaterno', 'telefono', 'fechaNacimiento', 'direccion', 'rol'];
@@ -56,18 +63,21 @@ usuariosRouter.post('/', async (req, res) => {
 usuariosRouter.get('/by-codigo/:codigo', async (req, res) => {
   const usuario = await obtenerPorCodigo(req.params.codigo);
   if (!usuario) return res.status(404).json({ error: 'No encontrado' });
-  res.json(usuario);
+  res.json({ id: usuario.id, codigo: usuario.codigo });
 });
 
 usuariosRouter.get('/:id', async (req, res) => {
   const usuario = await obtenerPorId(req.params.id);
   if (!usuario) return res.status(404).json({ error: 'No encontrado' });
-  res.json(usuario);
+  res.json(soloCamposPublicos(usuario));
 });
 
 usuariosRouter.get('/:id/red', async (req, res) => {
   const usuario = await obtenerPorId(req.params.id);
   if (!usuario) return res.status(404).json({ error: 'No encontrado' });
   const invitados = await listarInvitations(usuario.id);
-  res.json({ usuario, invitados });
+  res.json({
+    usuario: soloCamposPublicos(usuario),
+    invitados: invitados.map(soloCamposPublicos)
+  });
 });
