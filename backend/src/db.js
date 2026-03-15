@@ -41,8 +41,8 @@ export async function connect() {
 }
 
 // --- Admins (solo para login admin, no toca lógica de usuarios) ---
-export async function crearAdmin(email, passwordHash) {
-  const doc = { email: email.trim().toLowerCase(), passwordHash, createdAt: new Date() };
+export async function crearAdmin(email, passwordHash, role = 'admin') {
+  const doc = { email: email.trim().toLowerCase(), passwordHash, role, createdAt: new Date() };
   await adminsColl.insertOne(doc);
   return { email: doc.email };
 }

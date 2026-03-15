@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import {
@@ -13,21 +14,28 @@ import {
 export const adminRouter = Router();
 
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
+const TOKEN_LECTURA =
+  ADMIN_SECRET && crypto.createHash('sha256').update(ADMIN_SECRET + 'lectura').digest('hex');
 
 function validarConSecret(req) {
   const secret = req.body?.secret ?? req.header('x-admin-secret');
   return ADMIN_SECRET && secret === ADMIN_SECRET;
 }
 
+function tokenValido(token) {
+  return token === ADMIN_SECRET || token === TOKEN_LECTURA;
+}
+
 adminRouter.post('/crear', async (req, res) => {
   if (!validarConSecret(req)) return res.status(401).json({ error: 'No autorizado' });
-  const { email, password } = req.body ?? {};
+  const { email, password, role } = req.body ?? {};
   if (!email?.trim() || !password) return res.status(400).json({ error: 'Faltan email o contraseña' });
   const existente = await obtenerAdminPorEmail(email);
   if (existente) return res.status(409).json({ error: 'Ya existe un admin con ese email' });
   const passwordHash = await bcrypt.hash(password, 10);
-  await crearAdmin(email, passwordHash);
-  res.status(201).json({ ok: true, email: email.trim().toLowerCase() });
+  const rol = role === 'lectura' ? 'lectura' : 'admin';
+  await crearAdmin(email, passwordHash, rol);
+  res.status(201).json({ ok: true, email: email.trim().toLowerCase(), role: rol });
 });
 
 adminRouter.post('/login', async (req, res) => {
@@ -38,13 +46,15 @@ adminRouter.post('/login', async (req, res) => {
   if (!admin) return res.status(401).json({ error: 'Credenciales inválidas' });
   const ok = await bcrypt.compare(password, admin.passwordHash);
   if (!ok) return res.status(401).json({ error: 'Credenciales inválidas' });
-  res.json({ token: ADMIN_SECRET });
+  const rol = admin.role ?? 'admin';
+  const token = rol === 'lectura' ? TOKEN_LECTURA : ADMIN_SECRET;
+  res.json({ token, role: rol });
 });
 
 adminRouter.get('/redes', async (req, res) => {
   if (!ADMIN_SECRET) return res.status(500).json({ error: 'ADMIN_SECRET no configurado' });
   const token = req.header('x-admin-token');
-  if (token !== ADMIN_SECRET) return res.status(401).json({ error: 'No autorizado' });
+  if (!tokenValido(token)) return res.status(401).json({ error: 'No autorizado' });
 
   const usuarios = await listarUsuarios();
   const porId = new Map(usuarios.map((u) => [u.id, u]));

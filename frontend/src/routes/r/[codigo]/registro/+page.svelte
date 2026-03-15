@@ -121,7 +121,7 @@
       {:else}
         <p class="text-sm">Te has unido a la red.</p>
       {/if}
-      <a href="/" class="block mt-6 underline">Volver al inicio</a>
+      <a href="/r/{codigo}" class="block mt-6 underline">Volver al inicio</a>
     </div>
   {:else}
     <div class="bg-white rounded-lg border-2 {accentBorder} p-6 shadow-lg">

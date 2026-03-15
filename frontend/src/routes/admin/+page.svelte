@@ -5,8 +5,11 @@
   let cargando = $state(false);
   let redes = $state(null);
   let logueado = $state(false);
+  let role = $state('');
 
   const TOKEN_KEY = 'aliadosqr_admin_token';
+  const ROLE_KEY = 'aliadosqr_admin_role';
+  const esSoloLectura = $derived(role === 'lectura');
 
   async function login() {
     error = '';
@@ -22,7 +25,10 @@
         error = json.error ?? 'Credenciales inválidas';
         return;
       }
+      const r = json.role ?? 'admin';
       localStorage.setItem(TOKEN_KEY, json.token);
+      localStorage.setItem(ROLE_KEY, r);
+      role = r;
       logueado = true;
       await cargarRedes();
     } catch (e) {
@@ -47,6 +53,8 @@
       });
       if (res.status === 401) {
         localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(ROLE_KEY);
+        role = '';
         logueado = false;
         redes = null;
         error = 'Sesión expirada. Vuelve a iniciar sesión.';
@@ -91,6 +99,21 @@
   let cargandoEditar = $state(false);
   let errorCargaEditar = $state('');
   let eliminandoId = $state(null);
+  let busqueda = $state('');
+
+  const redesFiltradas = $derived.by(() => {
+    const list = redes ?? [];
+    const q = busqueda.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter(
+      (r) =>
+        (r.nombreCompleto ?? '').toLowerCase().includes(q) ||
+        (r.codigo ?? '').toLowerCase().includes(q) ||
+        (r.rol ?? '').toLowerCase().includes(q) ||
+        (r.invitanteNombre ?? '').toLowerCase().includes(q) ||
+        String(r.totalInvitados ?? '').includes(q)
+    );
+  });
 
   async function abrirEditar(r) {
     editando = r.id;
@@ -133,6 +156,8 @@
 
   function cerrarSesion() {
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(ROLE_KEY);
+    role = '';
     logueado = false;
     redes = null;
     error = '';
@@ -185,6 +210,7 @@
     const token = localStorage.getItem(TOKEN_KEY);
     if (token) {
       logueado = true;
+      role = localStorage.getItem(ROLE_KEY) ?? 'admin';
       cargarRedes();
     }
   }
@@ -235,15 +261,23 @@
     <div class="bg-white border-2 border-brand-black rounded-lg p-4">
       <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
         <h2 class="font-semibold">Resumen de redes</h2>
-        <div class="flex gap-2">
-          <button
-            type="button"
-            onclick={descargarCSV}
-            disabled={!redes?.length}
-            class="px-3 py-1 text-sm border border-brand-black rounded bg-white hover:bg-gray-100 disabled:opacity-50"
-          >
-            Descargar CSV
-          </button>
+        <div class="flex gap-2 flex-wrap">
+          {#if !esSoloLectura}
+            <a
+              href="/crear-red"
+              class="px-3 py-1 text-sm border border-brand-black rounded bg-brand-blue text-white hover:opacity-90"
+            >
+              Crear mi red
+            </a>
+            <button
+              type="button"
+              onclick={descargarCSV}
+              disabled={!redes?.length}
+              class="px-3 py-1 text-sm border border-brand-black rounded bg-white hover:bg-gray-100 disabled:opacity-50"
+            >
+              Descargar CSV
+            </button>
+          {/if}
           <button
             type="button"
             onclick={cargarRedes}
@@ -266,6 +300,12 @@
       {#if !redes}
         <p class="text-sm text-gray-600">{cargando ? 'Cargando…' : 'Sin datos aún.'}</p>
       {:else}
+        <input
+          type="search"
+          bind:value={busqueda}
+          placeholder="Buscar en toda la tabla…"
+          class="w-full max-w-sm mb-3 border-2 border-brand-black rounded px-3 py-1.5 text-sm"
+        />
         <div class="overflow-x-auto">
           <table class="w-full text-sm border-collapse">
             <thead>
@@ -275,36 +315,46 @@
                 <th class="border border-brand-black px-2 py-1 text-left">Rol</th>
                 <th class="border border-brand-black px-2 py-1 text-left">Invitante</th>
                 <th class="border border-brand-black px-2 py-1 text-right">Invitados</th>
-                <th class="border border-brand-black px-2 py-1 text-center">Editar y Eliminar</th>
+                {#if !esSoloLectura}
+                  <th class="border border-brand-black px-2 py-1 text-center">Editar y Eliminar</th>
+                {/if}
               </tr>
             </thead>
             <tbody>
-              {#each redes as r}
+              {#if busqueda.trim() && redesFiltradas.length === 0}
+                <tr>
+                  <td colspan={esSoloLectura ? 5 : 6} class="border border-brand-black px-2 py-3 text-center text-gray-600">Ningún registro coincide con la búsqueda.</td>
+                </tr>
+              {:else}
+                {#each redesFiltradas as r}
                 <tr>
                   <td class="border border-brand-black px-2 py-1">{r.nombreCompleto}</td>
                   <td class="border border-brand-black px-2 py-1">{r.codigo}</td>
                   <td class="border border-brand-black px-2 py-1 capitalize">{r.rol}</td>
                   <td class="border border-brand-black px-2 py-1">{r.invitanteNombre ?? '—'}</td>
                   <td class="border border-brand-black px-2 py-1 text-right">{r.totalInvitados}</td>
-                  <td class="border border-brand-black px-2 py-1 text-center">
-                    <button
-                      type="button"
-                      onclick={() => abrirEditar(r)}
-                      class="px-2 py-0.5 text-xs border border-brand-black rounded bg-white hover:bg-gray-100"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      onclick={() => eliminar(r)}
-                      disabled={eliminandoId === r.id}
-                      class="px-2 py-0.5 text-xs border border-brand-black rounded bg-white hover:bg-red-50 text-red-800 disabled:opacity-50 ml-1"
-                    >
-                      {eliminandoId === r.id ? '…' : 'Eliminar'}
-                    </button>
-                  </td>
+                  {#if !esSoloLectura}
+                    <td class="border border-brand-black px-2 py-1 text-center">
+                      <button
+                        type="button"
+                        onclick={() => abrirEditar(r)}
+                        class="px-2 py-0.5 text-xs border border-brand-black rounded bg-white hover:bg-gray-100"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        onclick={() => eliminar(r)}
+                        disabled={eliminandoId === r.id}
+                        class="px-2 py-0.5 text-xs border border-brand-black rounded bg-white hover:bg-red-50 text-red-800 disabled:opacity-50 ml-1"
+                      >
+                        {eliminandoId === r.id ? '…' : 'Eliminar'}
+                      </button>
+                    </td>
+                  {/if}
                 </tr>
-              {/each}
+                {/each}
+              {/if}
             </tbody>
           </table>
         </div>

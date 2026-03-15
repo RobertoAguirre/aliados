@@ -1,6 +1,15 @@
 <script>
+  import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import LeafletMap from '$lib/LeafletMap.svelte';
   import QrCode from '$lib/QrCode.svelte';
+
+  const TOKEN_KEY = 'aliadosqr_admin_token';
+  const ROLE_KEY = 'aliadosqr_admin_role';
+  onMount(() => {
+    if (!localStorage.getItem(TOKEN_KEY) || localStorage.getItem(ROLE_KEY) === 'lectura') goto('/admin');
+  });
+
   let form = $state({
     nombre: '',
     apellidoPaterno: '',
