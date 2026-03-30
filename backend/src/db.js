@@ -97,6 +97,17 @@ export async function listarInvitations(invitanteId) {
   return docs.map(docToUsuario);
 }
 
+/** Total de personas en la subred (descendientes directos e indirectos), sin contar al usuario raíz. */
+export async function contarDescendientesTotal(usuarioId) {
+  if (!ObjectId.isValid(usuarioId)) return 0;
+  const hijos = await listarInvitations(usuarioId);
+  let total = hijos.length;
+  for (const h of hijos) {
+    total += await contarDescendientesTotal(h.id);
+  }
+  return total;
+}
+
 export async function obtenerPorTelefono(telefono) {
   const doc = await coll.findOne({ telefono });
   return docToUsuario(doc);

@@ -294,15 +294,15 @@
             >
               Crear mi red
             </a>
-            <button
-              type="button"
-              onclick={descargarCSV}
-              disabled={!redes?.length}
-              class="px-3 py-1 text-sm border border-brand-black rounded bg-white hover:bg-gray-100 disabled:opacity-50"
-            >
-              Descargar CSV
-            </button>
           {/if}
+          <button
+            type="button"
+            onclick={descargarCSV}
+            disabled={!redes?.length}
+            class="px-3 py-1 text-sm border border-brand-black rounded bg-white hover:bg-gray-100 disabled:opacity-50"
+          >
+            Descargar CSV
+          </button>
           <button
             type="button"
             onclick={cargarRedes}

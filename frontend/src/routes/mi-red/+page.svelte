@@ -1,4 +1,5 @@
 <script>
+  import { afterNavigate } from '$app/navigation';
   import QrCode from '$lib/QrCode.svelte';
   let codigo = $state('');
   let enviando = $state(false);
@@ -33,6 +34,13 @@
       enviando = false;
     }
   }
+
+  afterNavigate(({ to }) => {
+    const c = to?.url.searchParams.get('codigo');
+    if (!c?.trim()) return;
+    codigo = c.trim().toUpperCase();
+    buscar();
+  });
 
   function compartirWhatsAppRed() {
     if (!red?.usuario) return;
@@ -91,7 +99,9 @@
       >
         COMPARTIR
       </button>
-      <h2 class="font-bold mt-6 mb-2">Invitados ({red.invitados.length})</h2>
+      <h2 class="font-bold mt-6 mb-2">
+        Invitados ({red.totalEstructura ?? red.invitados.length})
+      </h2>
       {#if red.invitados.length === 0}
         <p class="text-sm text-gray-600">Aún no hay invitados. Comparte tu enlace o QR.</p>
       {:else}
@@ -101,7 +111,16 @@
               {inv.nombre} {inv.apellidoPaterno}{#if inv.apellidoMaterno} {inv.apellidoMaterno}{/if}
               — <span class="capitalize">{inv.rol}</span>
               {#if inv.rol === 'impulsa' && inv.codigo}
-                — <span class="font-medium text-brand-black">{inv.codigo}</span>
+                —
+                <a
+                  href="/mi-red?codigo={inv.codigo}"
+                  class="font-medium text-brand-blue underline"
+                >
+                  {inv.codigo}
+                </a>
+                {#if inv.totalSubred != null}
+                  <span class="text-gray-600"> ({inv.totalSubred} en su red)</span>
+                {/if}
               {/if}
             </li>
           {/each}

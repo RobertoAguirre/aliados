@@ -1,5 +1,12 @@
 import { Router } from 'express';
-import { crearUsuario, obtenerPorCodigo, obtenerPorId, listarInvitations, obtenerPorTelefono } from '../db.js';
+import {
+  contarDescendientesTotal,
+  crearUsuario,
+  obtenerPorCodigo,
+  obtenerPorId,
+  listarInvitations,
+  obtenerPorTelefono
+} from '../db.js';
 
 export const usuariosRouter = Router();
 
@@ -76,8 +83,17 @@ usuariosRouter.get('/:id/red', async (req, res) => {
   const usuario = await obtenerPorId(req.params.id);
   if (!usuario) return res.status(404).json({ error: 'No encontrado' });
   const invitados = await listarInvitations(usuario.id);
+  const totalEstructura = await contarDescendientesTotal(usuario.id);
+  const invitadosConSubred = await Promise.all(
+    invitados.map(async (inv) => {
+      const base = soloCamposPublicos(inv);
+      const totalSubred = await contarDescendientesTotal(inv.id);
+      return { ...base, totalSubred };
+    })
+  );
   res.json({
     usuario: soloCamposPublicos(usuario),
-    invitados: invitados.map(soloCamposPublicos)
+    invitados: invitadosConSubred,
+    totalEstructura
   });
 });
