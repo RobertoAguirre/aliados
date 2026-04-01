@@ -3,9 +3,9 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import {
   actualizarUsuario,
+  contarDescendientesTotal,
   crearAdmin,
   eliminarUsuario,
-  listarInvitations,
   listarUsuariosPaginado,
   obtenerAdminPorEmail,
   obtenerPorId
@@ -66,12 +66,12 @@ adminRouter.get('/redes', async (req, res) => {
   const resultado = [];
 
   for (const u of usuarios) {
-    const invitados = await listarInvitations(u.id);
     const invitante = u.invitanteId ? porId.get(u.invitanteId) : null;
     const nombreCompleto = [u.nombre, u.apellidoPaterno, u.apellidoMaterno].filter(Boolean).join(' ');
     const invitanteNombre = invitante
       ? [invitante.nombre, invitante.apellidoPaterno].filter(Boolean).join(' ')
       : null;
+    const totalInvitados = await contarDescendientesTotal(u.id);
 
     resultado.push({
       id: u.id,
@@ -79,7 +79,7 @@ adminRouter.get('/redes', async (req, res) => {
       rol: u.rol,
       nombreCompleto,
       invitanteNombre,
-      totalInvitados: invitados.length
+      totalInvitados
     });
   }
 

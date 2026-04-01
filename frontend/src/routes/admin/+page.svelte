@@ -394,7 +394,16 @@
                 {#each redes as r}
                 <tr>
                   <td class="border border-brand-black px-2 py-1">{r.nombreCompleto}</td>
-                  <td class="border border-brand-black px-2 py-1">{r.codigo}</td>
+                  <td class="border border-brand-black px-2 py-1">
+                    <a
+                      href="/mi-red?codigo={r.codigo}"
+                      class="text-brand-blue underline font-medium"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {r.codigo}
+                    </a>
+                  </td>
                   <td class="border border-brand-black px-2 py-1 capitalize">{r.rol}</td>
                   <td class="border border-brand-black px-2 py-1">{r.invitanteNombre ?? '—'}</td>
                   <td class="border border-brand-black px-2 py-1 text-right">{r.totalInvitados}</td>
