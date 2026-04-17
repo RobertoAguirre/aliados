@@ -108,6 +108,36 @@ export async function contarDescendientesTotal(usuarioId) {
   return total;
 }
 
+/**
+ * Calcula el total de descendientes por usuario en una sola lectura.
+ * Devuelve Map<usuarioId, totalDescendientes>.
+ */
+export async function obtenerMapaConteosDescendientes() {
+  const docs = await coll.find({}, { projection: { _id: 1, invitanteId: 1 } }).toArray();
+  const hijosPorPadre = new Map();
+  for (const d of docs) {
+    const padreId = d.invitanteId?.toString();
+    if (!padreId) continue;
+    const hijoId = d._id.toString();
+    const hijos = hijosPorPadre.get(padreId) ?? [];
+    hijos.push(hijoId);
+    hijosPorPadre.set(padreId, hijos);
+  }
+
+  const memo = new Map();
+  function contar(uid) {
+    if (memo.has(uid)) return memo.get(uid);
+    const hijos = hijosPorPadre.get(uid) ?? [];
+    let total = hijos.length;
+    for (const h of hijos) total += contar(h);
+    memo.set(uid, total);
+    return total;
+  }
+
+  for (const d of docs) contar(d._id.toString());
+  return memo;
+}
+
 export async function obtenerPorTelefono(telefono) {
   const doc = await coll.findOne({ telefono });
   return docToUsuario(doc);
@@ -135,12 +165,10 @@ function filtroBusqueda(busqueda) {
   };
 }
 
-export async function listarUsuariosPaginado(skip, limit, busqueda = null) {
+export async function listarUsuariosPaginado(skip, limit, busqueda = null, incluirTotal = true) {
   const filter = filtroBusqueda(busqueda);
-  const [docs, total] = await Promise.all([
-    coll.find(filter).skip(skip).limit(limit).toArray(),
-    coll.countDocuments(filter)
-  ]);
+  const docs = await coll.find(filter).skip(skip).limit(limit).toArray();
+  const total = incluirTotal ? await coll.countDocuments(filter) : docs.length;
   return { usuarios: docs.map(docToUsuario), total };
 }
 

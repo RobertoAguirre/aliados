@@ -3,10 +3,10 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import {
   actualizarUsuario,
-  contarDescendientesTotal,
   crearAdmin,
   eliminarUsuario,
   listarUsuariosPaginado,
+  obtenerMapaConteosDescendientes,
   obtenerAdminPorEmail,
   obtenerPorId
 } from '../db.js';
@@ -60,8 +60,13 @@ adminRouter.get('/redes', async (req, res) => {
   const limit = Math.min(500000, Math.max(5, parseInt(req.query.limit, 10) || 25));
   const skip = (page - 1) * limit;
   const busqueda = typeof req.query.busqueda === 'string' ? req.query.busqueda.trim() : null;
+  const incluirTotal = req.query.includeTotal !== '0';
 
-  const { usuarios, total } = await listarUsuariosPaginado(skip, limit, busqueda || null);
+  const [paginado, conteosPorUsuario] = await Promise.all([
+    listarUsuariosPaginado(skip, limit, busqueda || null, incluirTotal),
+    obtenerMapaConteosDescendientes()
+  ]);
+  const { usuarios, total } = paginado;
   const porId = new Map(usuarios.map((u) => [u.id, u]));
   const resultado = [];
 
@@ -71,7 +76,7 @@ adminRouter.get('/redes', async (req, res) => {
     const invitanteNombre = invitante
       ? [invitante.nombre, invitante.apellidoPaterno].filter(Boolean).join(' ')
       : null;
-    const totalInvitados = await contarDescendientesTotal(u.id);
+    const totalInvitados = conteosPorUsuario.get(u.id) ?? 0;
 
     resultado.push({
       id: u.id,

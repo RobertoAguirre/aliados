@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import {
-  contarDescendientesTotal,
   crearUsuario,
+  obtenerMapaConteosDescendientes,
   obtenerPorCodigo,
   obtenerPorId,
   listarInvitations,
@@ -82,12 +82,15 @@ usuariosRouter.get('/:id', async (req, res) => {
 usuariosRouter.get('/:id/red', async (req, res) => {
   const usuario = await obtenerPorId(req.params.id);
   if (!usuario) return res.status(404).json({ error: 'No encontrado' });
-  const invitados = await listarInvitations(usuario.id);
-  const totalEstructura = await contarDescendientesTotal(usuario.id);
+  const [invitados, conteosPorUsuario] = await Promise.all([
+    listarInvitations(usuario.id),
+    obtenerMapaConteosDescendientes()
+  ]);
+  const totalEstructura = conteosPorUsuario.get(usuario.id) ?? 0;
   const invitadosConSubred = await Promise.all(
     invitados.map(async (inv) => {
       const base = soloCamposPublicos(inv);
-      const totalSubred = await contarDescendientesTotal(inv.id);
+      const totalSubred = conteosPorUsuario.get(inv.id) ?? 0;
       return { ...base, totalSubred };
     })
   );
